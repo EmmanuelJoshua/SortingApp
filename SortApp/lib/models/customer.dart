@@ -5,13 +5,6 @@ class CustomerList {
 
   CustomerList({this.customers});
 
-  // @override
-  // int compareTo(Customer other) {
-  //   int order = other.date.compareTo(other.date);
-  //   // if(order == 0)
-  //   return order;
-  // }
-
   factory CustomerList.fromJson(Map<String, dynamic> json) {
     var list = json['list'] as List;
     print(list.runtimeType);
@@ -22,11 +15,7 @@ class CustomerList {
       var ad = a.date;
       var bd = b.date;
       var s = ad.compareTo(bd);
-      // if (s == 0) {
-      //   return b.status.compareTo(a.status);
-      // } else {
       return s;
-      // }
     });
 
     List<Customer> customerList2 = customerList;

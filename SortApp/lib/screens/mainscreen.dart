@@ -11,19 +11,22 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final Map<String, Map<int, String>> reviews = {
-    'reviewHeader': {0: 'Demo Name1', 1: 'Demo Name2', 2: 'Demo Name3'},
-    'reviewText': {0: 'Onboarded', 1: 'Active', 2: 'Left'},
-    'reviewerCareer': {0: '04/01/2019', 1: '01/03/2020', 2: '31/01/2020'},
-    'reviewer': {0: 'M', 1: 'F', 2: 'M'}
-  };
-
   Future<CustomerList> customerData;
+
+  void getCustomerData() {
+    customerData = getData();
+  }
+
+  Future<void> _getCustomerData1() async {
+    setState(() {
+      getCustomerData();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    customerData = getData();
+    getCustomerData();
   }
 
   @override
@@ -52,81 +55,110 @@ class _MainScreenState extends State<MainScreen> {
     return FutureBuilder<CustomerList>(
         future: customerData,
         builder: (BuildContext context, AsyncSnapshot<CustomerList> snapshot) {
-          if (snapshot.hasData) {
-            CustomerList content = snapshot.data;
-            return ListView.separated(
-                scrollDirection: Axis.vertical,
-                itemCount: content.customers.length,
-                padding: EdgeInsets.only(top: 10, bottom: 20),
-                separatorBuilder: (context, index) => Divider(
-                      thickness: 0.9,
-                    ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                      margin: EdgeInsets.only(
-                          left: 10, right: 10, bottom: 6, top: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(15.0),
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          Row(
-                            children: [
-                              Container(
-                                alignment: Alignment.centerLeft,
-                                margin: EdgeInsets.only(left: 20),
-                                child: Text(content.customers[index].name,
-                                    style: headlines),
+          Widget demo;
+
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              CustomerList content = snapshot.data;
+
+              demo = RefreshIndicator(
+                onRefresh: _getCustomerData1,
+                child: ListView.separated(
+                    scrollDirection: Axis.vertical,
+                    itemCount: content.customers.length,
+                    padding: EdgeInsets.only(top: 10, bottom: 20),
+                    separatorBuilder: (context, index) => Divider(
+                          thickness: 0.9,
+                        ),
+                    itemBuilder: (BuildContext context, int index) {
+                      String dateString =
+                          content.customers[index].date.day.toString() +
+                              '/' +
+                              content.customers[index].date.month.toString() +
+                              '/' +
+                              content.customers[index].date.year.toString();
+                      return Container(
+                          margin: EdgeInsets.only(
+                              left: 10, right: 10, bottom: 6, top: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: Column(
+                            children: <Widget>[
+                              Row(
+                                children: [
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    margin: EdgeInsets.only(left: 20),
+                                    child: Text(content.customers[index].name,
+                                        style: headlines),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                        ' - ' + content.customers[index].status,
+                                        style: leadlines),
+                                  ),
+                                ],
                               ),
-                              Container(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                    ' - ' + content.customers[index].status,
-                                    style: leadlines),
+                              ListTile(
+                                leading: ClipOval(
+                                  clipper: CircleClipper(),
+                                  child: FadeInImage.assetNetwork(
+                                    placeholder: 'assets/images/user.png',
+                                    image: content.customers[index].profilePic,
+                                    imageErrorBuilder:
+                                        (context, exception, stacktrace) {
+                                      return Image.asset(
+                                          'assets/images/user.png',
+                                          height: 43,
+                                          width: 43);
+                                    },
+                                    fit: BoxFit.fill,
+                                    height: 43,
+                                    width: 43,
+                                  ),
+                                ),
+                                title: Text(
+                                    'Gender: ' +
+                                        content.customers[index].gender
+                                            .toUpperCase(),
+                                    style: headlines),
+                                subtitle: Text(dateString, style: leadlines2),
+                                // trailing: Image.asset(
+                                //   'assets/images/thumbs.png',
+                                //   height: 35,
+                                //   width: 35,
+                                // ),
                               ),
                             ],
-                          ),
-                          ListTile(
-                            leading: ClipOval(
-                              clipper: CircleClipper(),
-                              child: FadeInImage.assetNetwork(
-                                placeholder: 'assets/images/user.png',
-                                image: content.customers[index].profilePic,
-                                imageErrorBuilder:
-                                    (context, exception, stacktrace) {
-                                  debugPrint('shit');
-                                  return Image.asset('assets/images/user.png',  height: 43,
-                                width: 43);
-                                },
-                                fit: BoxFit.fill,
-                                height: 43,
-                                width: 43,
-                              ),
-                            ),
-                            title: Text(
-                                'Gender: ' +
-                                    content.customers[index].gender
-                                        .toUpperCase(),
-                                style: headlines),
-                            subtitle: Text(
-                                content.customers[index].date.toString(),
-                                style: leadlines2),
-                            // trailing: Image.asset(
-                            //   'assets/images/thumbs.png',
-                            //   height: 35,
-                            //   width: 35,
-                            // ),
-                          ),
-                        ],
-                      ));
-                });
-          } else {
-            return Center(
+                          ));
+                    }),
+              );
+            } else {
+              demo = Center(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.refresh,
+                    size: 35,
+                    color: primaryText,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _getCustomerData1();
+                    });
+                  },
+                ),
+              );
+            }
+          } else if (snapshot.connectionState == ConnectionState.waiting) {
+            demo = Center(
                 child: CircularProgressIndicator(
                     valueColor:
                         new AlwaysStoppedAnimation<Color>(primaryText)));
           }
+          return demo;
         });
   }
 }
